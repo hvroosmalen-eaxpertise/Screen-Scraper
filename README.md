@@ -57,8 +57,8 @@ Press `Ctrl+Q` to stop.
 
 | Location | Contents |
 |---|---|
-| `screenshots/` | Timestamped PNG files |
-| `results/` | Timestamped JSON files with extracted Q&A |
+| `%USERPROFILE%\ScreenScraper\screenshots\` | Timestamped PNG files |
+| `%USERPROFILE%\ScreenScraper\results\` | Timestamped JSON files with extracted Q&A |
 | Clipboard | Formatted Q&A summary after each scrape |
 
 ### Example JSON output

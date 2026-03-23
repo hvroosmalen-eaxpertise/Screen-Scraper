@@ -6,10 +6,10 @@ import json
 import pyperclip
 from datetime import datetime
 
-from scraper.paths import BASE_DIR
+from scraper.paths import USER_DATA_DIR
 
 
-RESULTS_DIR = BASE_DIR / "results"
+RESULTS_DIR = USER_DATA_DIR / "results"
 
 DIVIDER      = "-" * 45
 HEADER       = "-- Q&A Extracted " + "-" * 27

@@ -11,10 +11,10 @@ import mss
 import mss.tools
 from datetime import datetime
 
-from scraper.paths import BASE_DIR
+from scraper.paths import USER_DATA_DIR
 
 
-SCREENSHOTS_DIR = BASE_DIR / "screenshots"
+SCREENSHOTS_DIR = USER_DATA_DIR / "screenshots"
 
 
 def take_screenshot(monitor_index: int = 1) -> str:
