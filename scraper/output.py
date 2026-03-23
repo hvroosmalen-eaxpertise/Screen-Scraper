@@ -22,6 +22,9 @@ def format_qa(data: dict, result_path: str) -> str:
     if qa_list:
         for i, item in enumerate(qa_list, start=1):
             lines.append(f"\nQ{i}: {item.get('question', '')}")
+            options = item.get("options") or []
+            for opt in options:
+                lines.append(f"    {opt}")
             lines.append(f"A{i}: {item.get('answer', '')}")
     else:
         lines.append("\n(No questions and answers found in screenshot)")

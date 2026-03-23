@@ -18,17 +18,36 @@ MODEL = "claude-3-5-haiku-20241022"
 
 EXTRACTION_PROMPT = """Look at this screenshot carefully. Extract ALL questions and their answers that appear in the image.
 
+For each question, determine whether it is a plain question or a multiple-choice question:
+- Plain question: has a single direct answer.
+- Multiple-choice question: has labelled answer options (e.g. A, B, C, D or 1, 2, 3, 4).
+
 Return ONLY valid JSON in this exact format, no markdown, no explanation:
 {
   "questions_and_answers": [
-    {"question": "...", "answer": "..."},
-    ...
+    {
+      "question": "...",
+      "answer": "...",
+      "options": null
+    },
+    {
+      "question": "...",
+      "answer": "B",
+      "options": [
+        "A. first option",
+        "B. second option",
+        "C. third option",
+        "D. fourth option"
+      ]
+    }
   ],
   "source_description": "brief description of what the screenshot shows"
 }
 
-If no clear questions/answers are found, return:
-{"questions_and_answers": [], "source_description": "brief description of what the screenshot shows"}"""
+Rules:
+- "answer": the selected, highlighted, or correct answer if visible; otherwise null.
+- "options": list of ALL labelled choices as strings (include the label, e.g. "A. text"); null if not multiple choice.
+- If no clear questions/answers are found, return: {"questions_and_answers": [], "source_description": "..."}"""
 
 
 def extract_qa(image_path: str) -> dict:
@@ -60,7 +79,7 @@ def extract_qa(image_path: str) -> dict:
     try:
         response = client.messages.create(
             model=MODEL,
-            max_tokens=1024,
+            max_tokens=2048,
             messages=[
                 {
                     "role": "user",
