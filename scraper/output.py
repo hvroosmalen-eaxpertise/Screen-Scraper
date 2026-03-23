@@ -5,10 +5,11 @@ output.py — Format Q&A results, save to JSON, and copy to clipboard.
 import json
 import pyperclip
 from datetime import datetime
-from pathlib import Path
+
+from scraper.paths import BASE_DIR
 
 
-RESULTS_DIR = Path(__file__).parent.parent / "results"
+RESULTS_DIR = BASE_DIR / "results"
 
 DIVIDER      = "-" * 45
 HEADER       = "-- Q&A Extracted " + "-" * 27

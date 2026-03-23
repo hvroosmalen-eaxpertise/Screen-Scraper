@@ -9,12 +9,12 @@ Verified API (mss 9.x):
 
 import mss
 import mss.tools
-from pathlib import Path
 from datetime import datetime
 
+from scraper.paths import BASE_DIR
 
-# screenshots/ lives next to this package's parent (project root)
-SCREENSHOTS_DIR = Path(__file__).parent.parent / "screenshots"
+
+SCREENSHOTS_DIR = BASE_DIR / "screenshots"
 
 
 def take_screenshot(monitor_index: int = 1) -> str:

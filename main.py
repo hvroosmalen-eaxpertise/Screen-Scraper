@@ -12,9 +12,25 @@ import os
 import sys
 from dotenv import load_dotenv
 
+from scraper.paths import BASE_DIR
+
 # Load .env BEFORE any os.getenv() calls — override=True ensures .env wins
 # even if the variable is already set (empty) in the system environment
-load_dotenv(override=True)
+load_dotenv(BASE_DIR / ".env", override=True)
+
+
+def prompt_for_api_key() -> None:
+    """If no .env exists, ask the user for their API key and save it."""
+    env_path = BASE_DIR / ".env"
+    if not env_path.exists():
+        print("Welcome to Screen-Scraper!")
+        print("No .env file found. Please enter your Anthropic API key.")
+        print("(Get one at https://console.anthropic.com/settings/api-keys)\n")
+        key = input("ANTHROPIC_API_KEY: ").strip()
+        if key:
+            env_path.write_text(f"ANTHROPIC_API_KEY={key}\n", encoding="utf-8")
+            print(f"Saved to {env_path}\n")
+            load_dotenv(env_path, override=True)
 
 
 def check_api_key() -> None:
@@ -53,6 +69,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    prompt_for_api_key()
     check_api_key()
 
     if args.mode == "once":
