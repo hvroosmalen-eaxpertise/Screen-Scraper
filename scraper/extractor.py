@@ -111,9 +111,15 @@ def extract_qa(image_path: str) -> dict:
 
     response_text = response.content[0].text  # always [0].text, per SDK docs
 
+    # Strip markdown code fences if Claude wrapped the response
+    clean_text = response_text.strip()
+    if clean_text.startswith("```"):
+        clean_text = clean_text.split("\n", 1)[1]  # remove opening fence line
+        clean_text = clean_text.rsplit("```", 1)[0]  # remove closing fence
+
     # Parse JSON response — graceful fallback on failure
     try:
-        result = json.loads(response_text)
+        result = json.loads(clean_text)
         result.setdefault("questions_and_answers", [])
         result.setdefault("source_description", "")
         return result
