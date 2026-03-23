@@ -40,7 +40,7 @@ Takes one screenshot, extracts Q&A, saves result, then exits.
 python main.py --mode hotkey
 ```
 Listens for `Ctrl+`` (backtick/grave key). Press it any time to trigger a scrape.
-Press `Ctrl+C` to stop.
+Press `Ctrl+Q` to stop.
 
 > **Note:** The `keyboard` library requires Administrator privileges on Windows
 > for global hotkeys. Right-click your terminal and choose "Run as administrator".
@@ -48,7 +48,8 @@ Press `Ctrl+C` to stop.
 ### Options
 ```
 --mode {once,hotkey}   once = single run, hotkey = listen (default: hotkey)
---hotkey HOTKEY        key combo (default: ctrl+grave i.e. Ctrl+`)
+--hotkey HOTKEY        key combo to trigger scrape (default: ctrl+grave i.e. Ctrl+`)
+--stop-hotkey HOTKEY   key combo to stop the listener (default: ctrl+q)
 --monitor N            1 = primary monitor, 0 = all combined (default: 1)
 ```
 

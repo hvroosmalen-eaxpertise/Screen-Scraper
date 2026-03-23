@@ -41,6 +41,11 @@ def main() -> None:
         help="Hotkey to trigger scrape in hotkey mode (default: ctrl+grave i.e. Ctrl+`)",
     )
     parser.add_argument(
+        "--stop-hotkey",
+        default="ctrl+q",
+        help="Hotkey to stop the listener in hotkey mode (default: ctrl+q)",
+    )
+    parser.add_argument(
         "--monitor",
         type=int,
         default=1,
@@ -61,7 +66,7 @@ def main() -> None:
 
     elif args.mode == "hotkey":
         from scraper.hotkey import start_listener
-        start_listener(hotkey=args.hotkey, monitor_index=args.monitor)
+        start_listener(hotkey=args.hotkey, stop_hotkey=args.stop_hotkey, monitor_index=args.monitor)
 
 
 if __name__ == "__main__":

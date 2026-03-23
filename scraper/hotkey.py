@@ -6,7 +6,7 @@ global hotkeys. A startup check warns the user if not elevated.
 """
 
 import ctypes
-import sys
+import threading
 import keyboard
 
 from scraper.capture import take_screenshot
@@ -33,12 +33,12 @@ def on_trigger(monitor_index: int = 1) -> None:
         print(f"[ERROR] Pipeline failed: {e}")
 
 
-def start_listener(hotkey: str = "ctrl+grave", monitor_index: int = 1) -> None:
-    """Register hotkey and block until Ctrl+C.
+def start_listener(hotkey: str = "ctrl+grave", stop_hotkey: str = "ctrl+q", monitor_index: int = 1) -> None:
+    """Register hotkey and block until stop_hotkey is pressed.
 
     Args:
-        hotkey:        Key combination string. Default is "ctrl+grave" (Ctrl+`).
-                       The backtick key is called "grave" in the keyboard library.
+        hotkey:        Key combination to trigger a scrape. Default is "ctrl+grave" (Ctrl+`).
+        stop_hotkey:   Key combination to stop the listener. Default is "ctrl+q".
         monitor_index: Passed through to take_screenshot().
     """
     if not is_admin():
@@ -46,14 +46,15 @@ def start_listener(hotkey: str = "ctrl+grave", monitor_index: int = 1) -> None:
         print("  Global hotkeys may not work on Windows without admin privileges.")
         print("  Re-run this script as Administrator for reliable hotkey capture.\n")
 
+    stop_event = threading.Event()
+
     def _trigger():
         on_trigger(monitor_index=monitor_index)
 
     keyboard.add_hotkey(hotkey, _trigger)
-    print(f"Listening for [{hotkey}] ... (Ctrl+C to stop)")
+    keyboard.add_hotkey(stop_hotkey, stop_event.set)
+    print(f"Listening for [{hotkey}] ... press [{stop_hotkey}] to stop")
 
-    try:
-        keyboard.wait()   # blocks until Ctrl+C
-    except KeyboardInterrupt:
-        print("\nStopped.")
-        sys.exit(0)
+    stop_event.wait()   # blocks until stop_hotkey is pressed
+    keyboard.unhook_all()
+    print("\nStopped.")
