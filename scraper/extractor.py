@@ -14,7 +14,7 @@ from pathlib import Path
 
 
 # Cheapest Claude model that supports vision
-MODEL = "claude-3-5-haiku-20241022"
+MODEL = "claude-haiku-4-5-20251001"
 
 EXTRACTION_PROMPT = """Look at this screenshot carefully. Extract ALL questions and their answers that appear in the image.
 
