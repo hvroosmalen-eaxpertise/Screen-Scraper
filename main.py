@@ -4,7 +4,7 @@ main.py — Screen-Scraper entry point.
 Usage:
   python main.py --mode once              # capture once and extract Q&A
   python main.py --mode hotkey            # listen for hotkey (requires admin)
-  python main.py --mode hotkey --hotkey ctrl+shift+s --monitor 1
+  python main.py --mode hotkey --hotkey ctrl+grave --monitor 1
 """
 
 import argparse
@@ -37,8 +37,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--hotkey",
-        default="ctrl+shift+s",
-        help="Hotkey to trigger scrape in hotkey mode (default: ctrl+shift+s)",
+        default="ctrl+grave",
+        help="Hotkey to trigger scrape in hotkey mode (default: ctrl+grave i.e. Ctrl+`)",
     )
     parser.add_argument(
         "--monitor",

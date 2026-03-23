@@ -33,11 +33,12 @@ def on_trigger(monitor_index: int = 1) -> None:
         print(f"[ERROR] Pipeline failed: {e}")
 
 
-def start_listener(hotkey: str = "ctrl+shift+s", monitor_index: int = 1) -> None:
+def start_listener(hotkey: str = "ctrl+grave", monitor_index: int = 1) -> None:
     """Register hotkey and block until Ctrl+C.
 
     Args:
-        hotkey:        Key combination string (e.g. "ctrl+shift+s").
+        hotkey:        Key combination string. Default is "ctrl+grave" (Ctrl+`).
+                       The backtick key is called "grave" in the keyboard library.
         monitor_index: Passed through to take_screenshot().
     """
     if not is_admin():

@@ -4,7 +4,7 @@ Capture a screenshot on Windows and extract questions & answers from it using Cl
 
 ## How It Works
 
-1. Press `Ctrl+Shift+S` (or run `--mode once`)
+1. Press `Ctrl+`` (or run `--mode once`)
 2. A screenshot is taken and sent to Claude Vision
 3. Claude extracts all Q&A pairs from the image
 4. Results are printed to the console, saved as JSON, and copied to your clipboard
@@ -19,7 +19,7 @@ Capture a screenshot on Windows and extract questions & answers from it using Cl
 
 ```bash
 # 1. Install dependencies
-pip install -r requirements.txt
+pip install mss Pillow anthropic python-dotenv keyboard pyperclip
 
 # 2. Create your .env file
 copy .env.example .env
@@ -39,7 +39,7 @@ Takes one screenshot, extracts Q&A, saves result, then exits.
 ```bash
 python main.py --mode hotkey
 ```
-Listens for `Ctrl+Shift+S`. Press it any time to trigger a scrape.
+Listens for `Ctrl+`` (backtick/grave key). Press it any time to trigger a scrape.
 Press `Ctrl+C` to stop.
 
 > **Note:** The `keyboard` library requires Administrator privileges on Windows
@@ -48,7 +48,7 @@ Press `Ctrl+C` to stop.
 ### Options
 ```
 --mode {once,hotkey}   once = single run, hotkey = listen (default: hotkey)
---hotkey HOTKEY        key combo (default: ctrl+shift+s)
+--hotkey HOTKEY        key combo (default: ctrl+grave i.e. Ctrl+`)
 --monitor N            1 = primary monitor, 0 = all combined (default: 1)
 ```
 
@@ -77,7 +77,7 @@ Press `Ctrl+C` to stop.
 ```
 Screen-Scraper/
 ├── main.py               # CLI entry point
-├── requirements.txt
+├── requirements.md
 ├── .env                  # your API key (git-ignored)
 ├── .env.example          # template
 ├── scraper/
