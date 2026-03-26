@@ -18,21 +18,36 @@ MODEL = "claude-haiku-4-5-20251001"
 
 EXTRACTION_PROMPT = """Look at this screenshot carefully. Extract ALL questions and their answers that appear in the image.
 
-For each question, determine whether it is a plain question or a multiple-choice question:
-- Plain question: has a single direct answer.
-- Multiple-choice question: has labelled answer options (e.g. A, B, C, D or 1, 2, 3, 4).
+For each question determine:
+1. Whether it is a plain question or a multiple-choice question.
+2. The selection type based on the visual control shown next to each option:
+   - CIRCLE (radio button) = single-select: only one answer is correct.
+   - SQUARE (checkbox)     = multi-select: one or more answers may be correct.
 
 Return ONLY valid JSON in this exact format, no markdown, no explanation:
 {
   "questions_and_answers": [
     {
       "question": "...",
+      "multi_select": false,
       "answer": "...",
       "options": null
     },
     {
       "question": "...",
+      "multi_select": false,
       "answer": "B",
+      "options": [
+        "A. first option",
+        "B. second option",
+        "C. third option",
+        "D. fourth option"
+      ]
+    },
+    {
+      "question": "...",
+      "multi_select": true,
+      "answer": ["A", "C"],
       "options": [
         "A. first option",
         "B. second option",
@@ -45,7 +60,8 @@ Return ONLY valid JSON in this exact format, no markdown, no explanation:
 }
 
 Rules:
-- "answer": the selected, highlighted, or correct answer if visible; otherwise null.
+- "multi_select": true if checkboxes (squares) are shown next to options; false for radio buttons (circles) or plain questions.
+- "answer": for single-select or plain questions, a string or null; for multi-select, a list of selected/correct labels (e.g. ["A", "C"]) or empty list [] if none are selected.
 - "options": list of ALL labelled choices as strings (include the label, e.g. "A. text"); null if not multiple choice.
 - If no clear questions/answers are found, return: {"questions_and_answers": [], "source_description": "..."}"""
 

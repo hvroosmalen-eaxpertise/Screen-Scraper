@@ -22,21 +22,23 @@ MODEL = "claude-haiku-4-5-20251001"
 
 _SOLVE_PROMPT = """\
 You are a SAFe/LPM certification exam assistant. \
-Using ONLY the provided source material excerpts, determine the single best answer.
+Using ONLY the provided source material excerpts, determine the correct answer(s).
 
 SOURCE MATERIAL:
 {context}
 
 QUESTION: {question}
 
+SELECTION TYPE: {selection_type}
+
 OPTIONS:
 {options}
 
 Return ONLY valid JSON — no markdown fences, no extra text:
 {{
-  "answer": "<exact label or text of the correct option>",
-  "confidence": <integer 0-100, your certainty that this answer is correct based on the material>,
-  "why": "<one sentence from the source material explaining why this answer is correct>",
+  "answer": <string for single-select, e.g. "B"  —OR—  list for multi-select, e.g. ["A", "C"]>,
+  "confidence": <integer 0-100, your certainty based on the material>,
+  "why": "<one sentence from the source material explaining why the correct answer(s) are right>",
   "why_not": {{
     "<option label>": "<one sentence why this option is wrong>"
   }},
@@ -44,7 +46,8 @@ Return ONLY valid JSON — no markdown fences, no extra text:
 }}
 
 Notes:
-- "why_not" must contain one entry for every option EXCEPT the correct answer.
+- For SINGLE-SELECT: "answer" is a single label string; "why_not" covers every other option.
+- For MULTI-SELECT: "answer" is a list of all correct labels; "why_not" covers only the incorrect options.
 - If the source material does not clearly address the question, lower confidence accordingly.
 - Use the option labels exactly as given (e.g. "A", "1", or the full option text)."""
 
@@ -125,10 +128,11 @@ def solve_question(
     question: str,
     options: Optional[list[str]],
     material: MaterialIndex,
+    multi_select: bool = False,
 ) -> dict:
-    """Ask Claude to pick the correct answer using pre-loaded source material.
+    """Ask Claude to pick the correct answer(s) using pre-loaded source material.
 
-    Returns a dict with keys: answer, confidence (int 0-100), why, why_not (dict), source.
+    Returns a dict with keys: answer (str or list), confidence (int 0-100), why, why_not (dict), source.
     """
     query = question + (" " + " ".join(options) if options else "")
     relevant = material.find_relevant(query)
@@ -144,10 +148,17 @@ def solve_question(
         else "(open question — provide the correct short answer)"
     )
 
+    selection_type = (
+        "MULTI-SELECT (checkboxes — one or more answers may be correct, return a list)"
+        if multi_select
+        else "SINGLE-SELECT (radio buttons — exactly one answer is correct, return a string)"
+    )
+
     prompt = _SOLVE_PROMPT.format(
         context=context,
         question=question,
         options=options_text,
+        selection_type=selection_type,
     )
 
     client = anthropic.Anthropic()
@@ -175,7 +186,7 @@ def solve_question(
     except json.JSONDecodeError:
         result = {"why": raw[:200]}
 
-    result.setdefault("answer", None)
+    result.setdefault("answer", [] if multi_select else None)
     result.setdefault("confidence", 0)
     result.setdefault("why", "")
     result.setdefault("why_not", {})
@@ -187,6 +198,10 @@ def solve_question(
     except (TypeError, ValueError):
         result["confidence"] = 0
 
+    # Normalise answer type — multi-select should always be a list
+    if multi_select and isinstance(result["answer"], str):
+        result["answer"] = [result["answer"]] if result["answer"] else []
+
     return result
 
 
@@ -197,7 +212,12 @@ def solve_all(data: dict, material: MaterialIndex) -> dict:
     Returns the same dict (mutated in place).
     """
     for item in data.get("questions_and_answers", []):
-        sol = solve_question(item.get("question", ""), item.get("options"), material)
+        sol = solve_question(
+            item.get("question", ""),
+            item.get("options"),
+            material,
+            multi_select=item.get("multi_select", False),
+        )
         item["solved_answer"] = sol["answer"]
         item["solved_confidence"] = sol["confidence"]
         item["solved_why"] = sol["why"]

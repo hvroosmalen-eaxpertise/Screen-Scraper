@@ -33,13 +33,17 @@ def format_qa(data: dict, result_path: str) -> str:
             options = item.get("options") or []
             for opt in options:
                 lines.append(f"    {opt}")
-            lines.append(f"A{i}: {item.get('answer', '')}")
+            raw_answer = item.get("answer")
+            answer_str = ", ".join(raw_answer) if isinstance(raw_answer, list) else (raw_answer or "")
+            lines.append(f"A{i}: {answer_str}")
 
             # Show solver result if present
             if item.get("solved_answer") is not None:
                 conf = item.get("solved_confidence", 0)
+                solved = item["solved_answer"]
+                solved_str = ", ".join(solved) if isinstance(solved, list) else solved
                 lines.append(f"")
-                lines.append(f"  ANSWER:  {item['solved_answer']}")
+                lines.append(f"  ANSWER:  {solved_str}")
                 lines.append(f"  SURE:    {_confidence_bar(conf)}")
                 if item.get("solved_why"):
                     lines.append(f"  WHY:     {item['solved_why']}")
