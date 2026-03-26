@@ -11,6 +11,7 @@ Usage:
 import argparse
 import os
 import sys
+from datetime import datetime
 from dotenv import load_dotenv
 
 from scraper.paths import BASE_DIR
@@ -107,13 +108,17 @@ def main() -> None:
         from scraper.capture import take_screenshot
         from scraper.extractor import extract_qa
         from scraper.output import save_result
+        from scraper.paths import USER_DATA_DIR
+
+        session_ts = datetime.now().strftime("%Y-%m-%d_%H-%M")
+        session_path = USER_DATA_DIR / f"session_{session_ts}.md"
 
         path = take_screenshot(monitor_index=args.monitor)
         data = extract_qa(path)
         if material is not None:
             from scraper.safe_lpm_solver import solve_all
             solve_all(data, material)
-        save_result(data, path)
+        save_result(data, path, session_path=session_path, q_index=1)
 
     elif args.mode == "hotkey":
         from scraper.hotkey import start_listener
