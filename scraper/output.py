@@ -105,18 +105,22 @@ def format_qa_md(data: dict, q_index: int, timestamp: str) -> str:
                 lines.append(f"| {label} | {text} |")
             lines.append("")
 
-        lines.append(f"**Extracted answer:** {_answer_str(item.get('answer'))}")
+        lines.append(f"### Extracted answer: {_answer_str(item.get('answer'))}")
+        lines.append("")
 
         if item.get("solved_answer") is not None:
             conf = item.get("solved_confidence", 0)
+            lines.append(f"Solver answer: {_answer_str(item['solved_answer'])} \u2014 {conf}% confident")
             lines.append("")
-            lines.append(f"**Solver answer:** {_answer_str(item['solved_answer'])} \u2014 {conf}% confident")
             if item.get("solved_why"):
-                lines.append(f"**Why:** {item['solved_why']}")
+                lines.append(f"Why: {item['solved_why']}")
+                lines.append("")
             for opt_label, reason in (item.get("solved_why_not") or {}).items():
-                lines.append(f"**Why not {opt_label}:** {reason}")
+                lines.append(f"Why not {opt_label}: {reason}")
+                lines.append("")
             if item.get("solved_source"):
-                lines.append(f"**Source:** {item['solved_source']}")
+                lines.append(f"Source: {item['solved_source']}")
+                lines.append("")
 
         lines.append("")
 
