@@ -2,9 +2,10 @@
 main.py — Screen-Scraper entry point.
 
 Usage:
+  python main.py                          # hotkey mode; auto-enables solver if safe-material/ has PDFs
   python main.py --mode once              # capture once and extract Q&A
-  python main.py --mode hotkey            # listen for hotkey (requires admin)
-  python main.py --mode hotkey --hotkey ctrl+grave --monitor 1
+  python main.py --no-solve               # disable solver even if safe-material/ exists
+  python main.py --material path/to/pdfs  # use a different PDF folder
 """
 
 import argparse
@@ -67,10 +68,40 @@ def main() -> None:
         default=1,
         help="Monitor index: 1=primary, 0=all combined (default: 1)",
     )
+    parser.add_argument(
+        "--no-solve",
+        action="store_true",
+        help="Disable SAFe/LPM answer solver even if safe-material/ folder exists",
+    )
+    parser.add_argument(
+        "--material",
+        default=None,
+        help="Path to folder with source PDFs (default: safe-material/ next to main.py)",
+    )
     args = parser.parse_args()
 
     prompt_for_api_key()
     check_api_key()
+
+    # Auto-enable solver if safe-material/ has PDFs, unless --no-solve is set
+    from pathlib import Path
+    material = None
+    if not args.no_solve:
+        if args.material:
+            material_dir = Path(args.material)
+        elif getattr(sys, "frozen", False):
+            # PyInstaller 6+: data files are in _MEIPASS (_internal/ for folder builds)
+            material_dir = Path(sys._MEIPASS) / "safe-material"
+        else:
+            material_dir = BASE_DIR / "safe-material"
+        if material_dir.is_dir() and any(material_dir.glob("*.pdf")):
+            from scraper.safe_lpm_solver import MaterialIndex
+            material = MaterialIndex(material_dir)
+            print("=" * 45)
+            print("  SAFe/LPM Solver ready. Starting exam mode.")
+            print(f"  Press [{args.hotkey}] to capture a question.")
+            print(f"  Press [{args.stop_hotkey}] to stop.")
+            print("=" * 45 + "\n")
 
     if args.mode == "once":
         from scraper.capture import take_screenshot
@@ -79,11 +110,19 @@ def main() -> None:
 
         path = take_screenshot(monitor_index=args.monitor)
         data = extract_qa(path)
+        if material is not None:
+            from scraper.safe_lpm_solver import solve_all
+            solve_all(data, material)
         save_result(data, path)
 
     elif args.mode == "hotkey":
         from scraper.hotkey import start_listener
-        start_listener(hotkey=args.hotkey, stop_hotkey=args.stop_hotkey, monitor_index=args.monitor)
+        start_listener(
+            hotkey=args.hotkey,
+            stop_hotkey=args.stop_hotkey,
+            monitor_index=args.monitor,
+            material=material,
+        )
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@
 Install all dependencies with:
 
 ```bash
-pip install mss Pillow anthropic python-dotenv keyboard pyperclip
+pip install mss Pillow anthropic python-dotenv keyboard pyperclip pypdf
 ```
 
 ## Packages
@@ -16,6 +16,7 @@ pip install mss Pillow anthropic python-dotenv keyboard pyperclip
 | `python-dotenv` | Load `ANTHROPIC_API_KEY` from `.env` file |
 | `keyboard` | Global hotkey listener (`Ctrl+`` trigger) |
 | `pyperclip` | Copy results to clipboard |
+| `pypdf` | Extract text from SAFe/LPM source material PDFs (`--solve` mode) |
 
 ## Notes
 

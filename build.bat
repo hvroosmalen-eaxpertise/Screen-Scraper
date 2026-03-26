@@ -1,6 +1,6 @@
 @echo off
 echo Building screen-scraper.exe ...
-pip install pyinstaller --quiet
+pip install pyinstaller pypdf --quiet
 python -m PyInstaller screen-scraper.spec --noconfirm
 echo.
 echo Done. Output: dist\screen-scraper\

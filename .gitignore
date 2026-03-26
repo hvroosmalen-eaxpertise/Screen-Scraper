@@ -9,3 +9,7 @@ venv/
 
 dist/
 build/
+.vs/
+
+# Source material PDFs are large and may be copyrighted — keep local only
+safe-material/*.pdf

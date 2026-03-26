@@ -7,6 +7,7 @@ global hotkeys. A startup check warns the user if not elevated.
 
 import ctypes
 import threading
+from typing import Optional
 import keyboard
 
 from scraper.capture import take_screenshot
@@ -22,24 +23,34 @@ def is_admin() -> bool:
         return False
 
 
-def on_trigger(monitor_index: int = 1) -> None:
-    """Full pipeline: screenshot -> extract Q&A -> save & copy to clipboard."""
+def on_trigger(monitor_index: int = 1, material=None) -> None:
+    """Full pipeline: screenshot -> extract Q&A -> (optionally solve) -> save & copy."""
     print("\n[Hotkey triggered] Capturing screen ...")
     try:
         path = take_screenshot(monitor_index=monitor_index)
         data = extract_qa(path)
+        if material is not None:
+            from scraper.safe_lpm_solver import solve_all
+            print("[Solver] Looking up answers in source material ...")
+            solve_all(data, material)
         save_result(data, path)
     except Exception as e:
         print(f"[ERROR] Pipeline failed: {e}")
 
 
-def start_listener(hotkey: str = "ctrl+grave", stop_hotkey: str = "ctrl+q", monitor_index: int = 1) -> None:
+def start_listener(
+    hotkey: str = "ctrl+grave",
+    stop_hotkey: str = "ctrl+q",
+    monitor_index: int = 1,
+    material: Optional[object] = None,
+) -> None:
     """Register hotkey and block until stop_hotkey is pressed.
 
     Args:
         hotkey:        Key combination to trigger a scrape. Default is "ctrl+grave" (Ctrl+`).
         stop_hotkey:   Key combination to stop the listener. Default is "ctrl+q".
         monitor_index: Passed through to take_screenshot().
+        material:      Optional MaterialIndex for SAFe/LPM answer solving.
     """
     if not is_admin():
         print("WARNING: Not running as Administrator.")
@@ -49,7 +60,7 @@ def start_listener(hotkey: str = "ctrl+grave", stop_hotkey: str = "ctrl+q", moni
     stop_event = threading.Event()
 
     def _trigger():
-        on_trigger(monitor_index=monitor_index)
+        on_trigger(monitor_index=monitor_index, material=material)
 
     keyboard.add_hotkey(hotkey, _trigger)
     keyboard.add_hotkey(stop_hotkey, stop_event.set)
