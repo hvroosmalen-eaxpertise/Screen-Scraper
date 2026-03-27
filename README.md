@@ -72,6 +72,8 @@ Takes one screenshot, extracts Q&A, solves answers, saves result, then exits.
 
 On startup the solver indexes all PDFs and Markdown files in `safe-material/` into memory so there is no delay during the exam. Large MD files are split by section for better keyword retrieval. For each captured question it:
 
+> **Model advice:** The solver uses `claude-haiku-4-5-20251001`. Testing with `claude-sonnet-4-6` produced more flagged answers and no improvement in confidence scores — Haiku is more consistent for this structured Q&A retrieval task and significantly cheaper per question. Changing the model is not recommended.
+
 1. Finds the 12 most relevant pages/sections from the source material using keyword matching
 2. Sends the question, options, and context to Claude
 3. Returns the correct answer with:
