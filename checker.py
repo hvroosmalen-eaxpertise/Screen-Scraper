@@ -144,15 +144,34 @@ def run_checker(results_dir: Path, material_dir: Path, output_path: Path) -> Non
         for entry in flagged:
             lines.append(f"### {entry['question']}")
             lines.append("")
-            lines.append(f"- **Original answer:** {_answer_str(entry['solved_answer'])}")
-            lines.append(f"- **New answer:** {_answer_str(entry['new']['answer'])}")
-            lines.append(f"- **Original why:** {entry['solved_why']}")
-            lines.append(f"- **New why:** {entry['new'].get('why', '')}")
+            orig_conf = entry["solved_confidence"]
+            new_conf  = entry["new"].get("confidence", 0)
+            delta     = new_conf - orig_conf
+            delta_str = f"+{delta}%" if delta >= 0 else f"{delta}%"
+            trend     = "new material more confident" if delta > 0 else ("same confidence" if delta == 0 else "new material less confident")
+            if entry.get("options"):
+                lines.append("**Options:**")
+                lines.append("")
+                for opt in entry["options"]:
+                    lines.append(opt)
+                    lines.append("")
+            lines.append(f"**Original answer:** {_answer_str(entry['solved_answer'])} — {orig_conf}% confident")
+            lines.append("")
+            lines.append(f"**New answer:** {_answer_str(entry['new']['answer'])} — {new_conf}% confident")
+            lines.append("")
+            lines.append(f"**Confidence delta:** {delta_str} ({trend})")
+            lines.append("")
+            lines.append(f"**Original why:** {entry['solved_why']}")
+            lines.append("")
+            lines.append(f"**New why:** {entry['new'].get('why', '')}")
+            lines.append("")
             if entry["new"].get("why_not"):
                 for label, reason in entry["new"]["why_not"].items():
-                    lines.append(f"- **Why not {label}:** {reason}")
-            lines.append(f"- **New source:** {entry['new'].get('source', '')}")
-            lines.append(f"- **Seen in:** {', '.join(entry['seen_in'])}")
+                    lines.append(f"**Why not {label}:** {reason}")
+                    lines.append("")
+            lines.append(f"**New source:** {entry['new'].get('source', '')}")
+            lines.append("")
+            lines.append(f"**Seen in:** {', '.join(entry['seen_in'])}")
             lines.append("")
     else:
         lines.append("*(none — all answers confirmed)*")
@@ -168,9 +187,17 @@ def run_checker(results_dir: Path, material_dir: Path, output_path: Path) -> Non
         for entry in confirmed:
             lines.append(f"### {entry['question']}")
             lines.append("")
-            lines.append(f"- **Answer:** {_answer_str(entry['solved_answer'])} — {entry['solved_confidence']}% confident")
-            lines.append(f"- **Source:** {entry['solved_source']}")
-            lines.append(f"- **Seen in:** {', '.join(entry['seen_in'])}")
+            if entry.get("options"):
+                lines.append("**Options:**")
+                lines.append("")
+                for opt in entry["options"]:
+                    lines.append(opt)
+                    lines.append("")
+            lines.append(f"**Answer:** {_answer_str(entry['solved_answer'])} — {entry['solved_confidence']}% confident")
+            lines.append("")
+            lines.append(f"**Source:** {entry['solved_source']}")
+            lines.append("")
+            lines.append(f"**Seen in:** {', '.join(entry['seen_in'])}")
             lines.append("")
     else:
         lines.append("*(none confirmed)*")

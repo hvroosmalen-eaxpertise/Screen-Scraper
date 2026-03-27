@@ -94,7 +94,21 @@ class MaterialIndex:
         for md_path in md_files:
             try:
                 text = md_path.read_text(encoding="utf-8")
-                if text.strip():
+                if not text.strip():
+                    continue
+                # Split large MD files by ## sections so each section is searchable
+                import re as _re
+                sections = _re.split(r'\n(?=## )', text.strip())
+                if len(sections) > 1:
+                    count = 0
+                    for sec_num, section in enumerate(sections, start=1):
+                        if section.strip():
+                            self.pages.append(
+                                {"text": section, "source": md_path.name, "page": sec_num}
+                            )
+                            count += 1
+                    print(f"[Solver]   {md_path.name}  ({count} sections)")
+                else:
                     self.pages.append(
                         {"text": text, "source": md_path.name, "page": 1}
                     )
