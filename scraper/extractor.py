@@ -61,7 +61,7 @@ Return ONLY valid JSON in this exact format, no markdown, no explanation:
 
 Rules:
 - "multi_select": true if checkboxes (squares) are shown next to options; false for radio buttons (circles) or plain questions.
-- "answer": for single-select or plain questions, a string or null; for multi-select, a list of selected/correct labels (e.g. ["A", "C"]) or empty list [] if none are selected.
+- "answer": the option the USER has currently selected — identified by a filled/solid circle (●) for radio buttons or a checked box (☑) for checkboxes. For single-select, a string label (e.g. "B") or null if nothing is selected. For multi-select, a list of selected labels (e.g. ["A", "C"]) or empty list [] if none are checked.
 - "options": list of ALL labelled choices as strings (include the label, e.g. "A. text"); null if not multiple choice.
 - If no clear questions/answers are found, return: {"questions_and_answers": [], "source_description": "..."}"""
 

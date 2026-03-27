@@ -30,6 +30,15 @@ def _answer_str(answer) -> str:
     return answer or ""
 
 
+def _answers_match(user_answer, solved_answer) -> bool:
+    """Return True if user_answer and solved_answer refer to the same option(s)."""
+    if isinstance(user_answer, list) and isinstance(solved_answer, list):
+        return set(a.strip().upper() for a in user_answer) == set(a.strip().upper() for a in solved_answer)
+    u = (user_answer or "").strip().upper() if isinstance(user_answer, str) else ""
+    s = (solved_answer or "").strip().upper() if isinstance(solved_answer, str) else ""
+    return bool(u and s and u == s)
+
+
 def format_qa(data: dict, result_path: str) -> str:
     """Return a human-readable Q&A summary string for the console."""
     lines = [HEADER]
@@ -55,6 +64,14 @@ def format_qa(data: dict, result_path: str) -> str:
                     lines.append(f"  NOT {opt_label:<3}  {reason}")
                 if item.get("solved_source"):
                     lines.append(f"  SOURCE:  {item['solved_source']}")
+
+                user_ans = item.get("answer")
+                solved_ans = item.get("solved_answer")
+                if user_ans is not None and user_ans != [] and user_ans != "":
+                    if _answers_match(user_ans, solved_ans):
+                        lines.append(f"  CHECK:   \u2713 Your answer ({_answer_str(user_ans)}) matches the solver \u2014 good luck!")
+                    else:
+                        lines.append(f"  CHECK:   \u2717 WARNING \u2014 you selected {_answer_str(user_ans)} but solver says {_answer_str(solved_ans)}")
     else:
         lines.append("\n(No questions and answers found in screenshot)")
 
@@ -120,6 +137,15 @@ def format_qa_md(data: dict, q_index: int, timestamp: str) -> str:
                 lines.append("")
             if item.get("solved_source"):
                 lines.append(f"Source: {item['solved_source']}")
+                lines.append("")
+
+            user_ans = item.get("answer")
+            solved_ans = item.get("solved_answer")
+            if user_ans is not None and user_ans != [] and user_ans != "":
+                if _answers_match(user_ans, solved_ans):
+                    lines.append(f"**Check:** \u2713 Your answer matches \u2014 **{_answer_str(user_ans)}**")
+                else:
+                    lines.append(f"**Check:** \u2717 WRONG \u2014 you selected **{_answer_str(user_ans)}**, solver says **{_answer_str(solved_ans)}**")
                 lines.append("")
 
         lines.append("")
