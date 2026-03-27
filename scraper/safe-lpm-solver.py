@@ -138,6 +138,42 @@ class MaterialIndex:
         return scored[:top_n]
 
 
+_EXPAND_PROMPT = (
+    "You are a SAFe terminology expert. Rewrite the following exam question and options "
+    "as a flat list of relevant SAFe keywords and synonyms (no sentences, no punctuation). "
+    "Include both the exam phrasing AND the SAFe source material wording for the same concepts. "
+    "Return ONLY the keywords, space-separated — nothing else.\n\n"
+    "Question: {question}\n"
+    "Options: {options}"
+)
+
+
+def expand_query(
+    question: str,
+    options: Optional[list[str]],
+    client: anthropic.Anthropic,
+) -> str:
+    """Return an enriched query string with SAFe synonyms for better keyword retrieval.
+
+    Appends the expansion to the original query so original keywords are always present.
+    Falls back to the original query on any API error.
+    """
+    try:
+        prompt = _EXPAND_PROMPT.format(
+            question=question,
+            options=" ".join(options) if options else "",
+        )
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=200,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        expansion = response.content[0].text.strip()
+        return question + " " + (" ".join(options) if options else "") + " " + expansion
+    except anthropic.APIError:
+        return question + (" " + " ".join(options) if options else "")
+
+
 def solve_question(
     question: str,
     options: Optional[list[str]],
@@ -148,7 +184,8 @@ def solve_question(
 
     Returns a dict with keys: answer (str or list), confidence (int 0-100), why, why_not (dict), source.
     """
-    query = question + (" " + " ".join(options) if options else "")
+    client = anthropic.Anthropic()
+    query = expand_query(question, options, client)
     relevant = material.find_relevant(query)
 
     context = "\n\n---\n\n".join(
@@ -175,7 +212,6 @@ def solve_question(
         selection_type=selection_type,
     )
 
-    client = anthropic.Anthropic()
     try:
         response = client.messages.create(
             model=MODEL,
