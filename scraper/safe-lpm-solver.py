@@ -110,7 +110,7 @@ class MaterialIndex:
     def ready(self) -> bool:
         return len(self.pages) > 0
 
-    def find_relevant(self, query: str, top_n: int = 8) -> list[dict]:
+    def find_relevant(self, query: str, top_n: int = 12) -> list[dict]:
         """Return up to top_n pages ranked by 4+ letter keyword overlap with query."""
         query_words = set(re.findall(r"\b\w{4,}\b", query.lower()))
         if not query_words or not self.pages:
