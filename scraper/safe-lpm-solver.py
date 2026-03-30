@@ -57,6 +57,7 @@ class MaterialIndex:
 
     def __init__(self, folder: Path) -> None:
         self.pages: list[dict] = []  # {"text", "source", "page"}
+        self.client = anthropic.Anthropic()
         self._load(folder)
 
     def _load(self, folder: Path) -> None:
@@ -97,8 +98,7 @@ class MaterialIndex:
                 if not text.strip():
                     continue
                 # Split large MD files by ## sections so each section is searchable
-                import re as _re
-                sections = _re.split(r'\n(?=## )', text.strip())
+                sections = re.split(r'\n(?=## )', text.strip())
                 if len(sections) > 1:
                     count = 0
                     for sec_num, section in enumerate(sections, start=1):
@@ -184,8 +184,7 @@ def solve_question(
 
     Returns a dict with keys: answer (str or list), confidence (int 0-100), why, why_not (dict), source.
     """
-    client = anthropic.Anthropic()
-    query = expand_query(question, options, client)
+    query = expand_query(question, options, material.client)
     relevant = material.find_relevant(query)
 
     context = "\n\n---\n\n".join(
@@ -213,7 +212,7 @@ def solve_question(
     )
 
     try:
-        response = client.messages.create(
+        response = material.client.messages.create(
             model=MODEL,
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt}],
