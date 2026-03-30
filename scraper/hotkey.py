@@ -68,14 +68,22 @@ def start_listener(
     counter = itertools.count(start=1)
 
     stop_event = threading.Event()
+    busy = threading.Event()
 
     def _trigger():
-        on_trigger(
-            monitor_index=monitor_index,
-            material=material,
-            session_path=session_path,
-            q_index=next(counter),
-        )
+        if busy.is_set():
+            print("[Hotkey] Still processing previous screenshot — skipping.")
+            return
+        busy.set()
+        try:
+            on_trigger(
+                monitor_index=monitor_index,
+                material=material,
+                session_path=session_path,
+                q_index=next(counter),
+            )
+        finally:
+            busy.clear()
 
     keyboard.add_hotkey(hotkey, _trigger)
     keyboard.add_hotkey(stop_hotkey, stop_event.set)
