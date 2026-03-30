@@ -32,6 +32,9 @@ def take_screenshot(monitor_index: int = 1) -> str:
     output_path = SCREENSHOTS_DIR / f"{timestamp}.png"
 
     with mss.mss() as sct:
+        if monitor_index >= len(sct.monitors):
+            print(f"[Capture] WARNING: monitor {monitor_index} not found ({len(sct.monitors) - 1} available). Using primary.")
+            monitor_index = 1
         monitor = sct.monitors[monitor_index]
         shot = sct.grab(monitor)
         mss.tools.to_png(shot.rgb, shot.size, output=str(output_path))
