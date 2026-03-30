@@ -7,6 +7,7 @@ global hotkeys. A startup check warns the user if not elevated.
 
 import ctypes
 import itertools
+import sys
 import threading
 from datetime import datetime
 from pathlib import Path
@@ -56,10 +57,10 @@ def start_listener(
         monitor_index: Passed through to take_screenshot().
         material:      Optional MaterialIndex for SAFe/LPM answer solving.
     """
-    if not is_admin():
-        print("WARNING: Not running as Administrator.")
-        print("  Global hotkeys may not work on Windows without admin privileges.")
-        print("  Re-run this script as Administrator for reliable hotkey capture.\n")
+    if sys.platform == "win32" and not is_admin():
+        print("[Hotkey] ERROR: global hotkeys require administrator privileges on Windows.")
+        print("[Hotkey] Please re-run the application as Administrator.")
+        sys.exit(1)
 
     # Create a session MD file path for this listening session
     session_ts = datetime.now().strftime("%Y-%m-%d_%H-%M")
