@@ -60,13 +60,14 @@ Takes one screenshot, extracts Q&A, solves answers, saves result, then exits.
 --mode {once,hotkey}   once = single run, hotkey = listen (default: hotkey)
 --hotkey HOTKEY        key combo to trigger scrape (default: ctrl+grave i.e. Ctrl+`)
 --stop-hotkey HOTKEY   key combo to stop the listener (default: ctrl+q)
---monitor N            1 = primary monitor, 0 = all combined (default: 1)
+--monitor N            1 = primary monitor, 0 = all combined (default: 1); invalid index falls back to primary
 --no-solve             disable the SAFe/LPM solver even if safe-material/ exists
 --material PATH        path to a custom folder of source PDFs/MDs
 ```
 
 > **Note:** The `keyboard` library requires Administrator privileges on Windows
 > for global hotkeys. Right-click your terminal and choose "Run as administrator".
+> The application will exit with a clear error if started without admin privileges.
 
 ## SAFe/LPM Solver
 
@@ -149,8 +150,25 @@ python checker.py
 Output: `%USERPROFILE%\ScreenScraper\validation_YYYY-MM-DD.md`
 
 The report shows:
+- **Weak Topic Areas** table grouping all questions by SAFe topic with flagged count and average confidence
 - **Confirmed** questions (answer unchanged) with confidence score
 - **Flagged** questions (answer changed) with original vs new answer, confidence delta, and full reasoning
+
+## Post-Exam Revalidation
+
+`revalidate.py` is a two-step post-exam review tool for comparing your selected answers against the solver's suggestions.
+
+**Step 1 — Generate review:**
+```bash
+python revalidate.py --generate-review
+```
+Produces `%USERPROFILE%\ScreenScraper\revalidation_review.md` — a markdown table of all exam questions in exam sequence with solver answer pre-filled. Edit the **Selected Answer** column with the answers you actually chose.
+
+**Step 2 — Revalidate disagreements:**
+```bash
+python revalidate.py --revalidate
+```
+Reads the filled-in review file, re-runs the solver with deeper reasoning on every question where your selection differs from the solver, and writes `%USERPROFILE%\ScreenScraper\revalidation_report.md`.
 
 ## Output
 
@@ -160,6 +178,8 @@ The report shows:
 | `%USERPROFILE%\ScreenScraper\results\` | Timestamped JSON files with extracted Q&A and solver results |
 | `%USERPROFILE%\ScreenScraper\session_YYYY-MM-DD_HH-MM.md` | Running session log in Markdown |
 | `%USERPROFILE%\ScreenScraper\validation_YYYY-MM-DD.md` | Checker validation report |
+| `%USERPROFILE%\ScreenScraper\revalidation_review.md` | Post-exam review table (step 1 of revalidate.py) |
+| `%USERPROFILE%\ScreenScraper\revalidation_report.md` | Post-exam revalidation report (step 2 of revalidate.py) |
 | Clipboard | Formatted summary after each scrape |
 
 ## Project Structure
@@ -168,6 +188,7 @@ The report shows:
 Screen-Scraper/
 ├── main.py                      # CLI entry point
 ├── checker.py                   # Validation tool — re-solves results and reports differences
+├── revalidate.py                # Post-exam review — compare selected vs solver answers
 ├── compile_material.py          # Generates safe-overview.md from all PDFs
 ├── requirements.md
 ├── screen-scraper.spec          # PyInstaller build spec
