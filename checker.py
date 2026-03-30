@@ -11,6 +11,7 @@ Usage:
 import argparse
 import json
 import sys
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
@@ -18,6 +19,79 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parent / ".env", override=True)
 
+
+# ---------------------------------------------------------------------------
+# SAFe topic classification
+# ---------------------------------------------------------------------------
+
+SAFE_TOPICS: list[tuple[str, list[str]]] = [
+    ("Portfolio Kanban",            ["portfolio kanban", "kanban state", "kanban board", "funnel", "reviewing", "analyzing", "backlog", "implementing", "done"]),
+    ("Participatory Budgeting",     ["participatory budget", "participatory budgeting", "pb event"]),
+    ("WSJF / Epic Sequencing",      ["wsjf", "weighted shortest job", "job duration", "sequenc"]),
+    ("Epic Lifecycle",              ["epic lifecycle", "epic owner", "epic hypothesis", "lean business case", "mvp", "minimum viable"]),
+    ("Lean Budget Guardrails",      ["lean budget guardrail", "budget guardrail", "guardrail", "capacity allocation", "color of money"]),
+    ("OKRs",                        ["okr", "objective and key result", "key result"]),
+    ("Value Streams",               ["value stream", "ars", "agile release train"]),
+    ("Portfolio Vision & Strategy", ["portfolio vision", "portfolio canvas", "portfolio roadmap", "strategic theme", "portfolio strategy"]),
+    ("Strategic Analysis",          ["horizon thinking", "horizon 1", "horizon 2", "horizon 3", "swot", "strategic analysis", "market analysis"]),
+    ("Flow Metrics",                ["flow metric", "flow velocity", "flow load", "flow time", "flow efficiency", "flow distribution", "flow debt", "how does safe measure"]),
+    ("Agile Portfolio Operations",  ["agile portfolio operation", "portfolio sync", "apo", "coach", "scrum of scrums"]),
+    ("Lean Governance",             ["lean governance", "audit", "compliance", "forecast", "dynamic budgeting", "agile capitalization", "capitalization"]),
+    ("CALMR / DevOps",              ["calmr", "devops", "continuous delivery", "continuous deployment", "release on demand", "built-in quality"]),
+    ("LPM Roles",                   ["epic owner", "lpm team", "portfolio manager", "enterprise architect", "business owner", "product management", "release train engineer", "rte"]),
+    ("LPM Implementation",          ["implementation roadmap", "lpm adoption", "kickoff", "community of practice", "cop", "change leadership", "impediment"]),
+    ("SAFe Principles",             ["safe principle", "lean principle", "systems thinking", "decentralize", "cadence", "economic framework"]),
+    ("Scrum / Team Agility",        ["sprint", "iteration", "retrospective", "backlog refinement", "scrum master", "product owner", "velocity", "story point"]),
+    ("Traditional vs Lean PM",      ["traditional", "project-based", "project management", "legacy", "stage gate"]),
+    ("AI & Portfolio Management",   ["artificial intelligence", "ai-enabled", "machine learning", "ai "]),
+]
+
+
+def classify_topic(question: str) -> str:
+    """Return the first matching SAFe topic name, or 'Other / General'."""
+    lower = question.lower()
+    for topic, keywords in SAFE_TOPICS:
+        if any(kw in lower for kw in keywords):
+            return topic
+    return "Other / General"
+
+
+def build_topic_table(flagged: list[dict], confirmed: list[dict]) -> list[str]:
+    """Return markdown lines for the Weak Topic Areas table."""
+    stats: dict[str, dict] = defaultdict(lambda: {"total": 0, "flagged": 0, "conf_sum": 0})
+
+    for entry in flagged:
+        t = classify_topic(entry["question"])
+        stats[t]["total"] += 1
+        stats[t]["flagged"] += 1
+        stats[t]["conf_sum"] += entry.get("solved_confidence", 0)
+
+    for entry in confirmed:
+        t = classify_topic(entry["question"])
+        stats[t]["total"] += 1
+        stats[t]["conf_sum"] += entry.get("solved_confidence", 0)
+
+    rows = []
+    for topic, s in stats.items():
+        avg_conf = round(s["conf_sum"] / s["total"]) if s["total"] else 0
+        rows.append((topic, s["total"], s["flagged"], avg_conf))
+
+    # Sort: most flagged first, then lowest avg confidence first
+    rows.sort(key=lambda r: (-r[2], r[3]))
+
+    lines = [
+        "## Weak Topic Areas",
+        "",
+        "| Topic | Questions | Flagged | Avg Confidence |",
+        "|---|---|---|---|",
+    ]
+    for topic, total, n_flagged, avg_conf in rows:
+        lines.append(f"| {topic} | {total} | {n_flagged} | {avg_conf}% |")
+    lines.append("")
+    return lines
+
+
+# ---------------------------------------------------------------------------
 
 DEFAULT_RESULTS  = Path("C:/Users/hanva/ScreenScraper/results")
 DEFAULT_MATERIAL = Path(__file__).parent / "safe-material"
@@ -133,6 +207,12 @@ def run_checker(results_dir: Path, material_dir: Path, output_path: Path) -> Non
         f"({duplicate_count} duplicates skipped across {total_seen} total) "
         f"— **{len(flagged)} flagged**, {len(confirmed)} confirmed.",
         "",
+    ]
+
+    if questions:
+        lines += build_topic_table(flagged, confirmed)
+
+    lines += [
         "---",
         "",
     ]
